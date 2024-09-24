@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Observer Pattern Example</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+    <div id="root" class="container mx-auto p-4"></div>
+
+    <script type="text/babel">
+        // Observer Class
+        class Observer {
+            constructor() {
+                this.subscribers = []; // To store product subscribers
+            }
+
+            // Method to subscribe to a product
+            subscribe(productId, callback) {
+                const existingSubscriber = this.subscribers.find(sub => sub.productId === productId);
+                if (existingSubscriber) {
+                    existingSubscriber.callbacks.push(callback);
+                } else {
+                    this.subscribers.push({ productId, callbacks: [callback] });
+                }
+            }
+
+            // Method to notify subscribers when a product is available
+            notify(productId) {
+                const subscriber = this.subscribers.find(sub => sub.productId === productId);
+                if (subscriber) {
+                    subscriber.callbacks.forEach(callback => callback()); // Notify all callbacks
+                }
+            }
+        }
+
+        // Product Component
+        const Product = ({ productId, productName, observer }) => {
+            const [messages, setMessages] = React.useState([]); // Store messages
+            const [subscribed, setSubscribed] = React.useState(false);
+
+            // Handle subscription
+            const handleSubscribe = () => {
+                observer.subscribe(productId, () => {
+                    setMessages(prevMessages => [...prevMessages, `Great news! ${productName} is now available!`]); // Add new message
+                });
+                setSubscribed(true); // Mark as subscribed
+            };
+
+            return (
+                <div className="bg-white shadow-md rounded-lg p-4 mb-4">
+                    <h3 className="text-xl font-semibold">{productName}</h3>
+                    <button
+                        onClick={handleSubscribe}
+                        disabled={subscribed}
+                        className={`mt-2 px-4 py-2 rounded-lg text-white ${subscribed ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'}`}
+                    >
+                        {subscribed ? 'Subscribed' : 'Subscribe for Updates'}
+                    </button>
+                    {messages.map((message, index) => (
+                        <p key={index} className="mt-2 text-green-600">{message}</p> // Display each message
+                    ))}
+                </div>
+            );
+        };
+
+        // App Component
+        const App = () => {
+            const observer = React.useRef(new Observer()).current; // Create an observer instance
+
+            return (
+                <div>
+                    <h1 className="text-3xl font-bold mb-4">Product Notification System</h1>
+                    <div className="mt-4 mb-4">
+                        {/* Example buttons to simulate product availability */}
+                        <button onClick={() => observer.notify("1")} className="mr-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                            Notify Smartphone Available
+                        </button>
+                        <button onClick={() => observer.notify("2")} className="mr-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                            Notify Laptop Available
+                        </button>
+                        <button onClick={() => observer.notify("3")} className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                            Notify Tablet Available
+                        </button>
+                    </div>
+                    <div>
+                        <Product productId="1" productName="Smartphone" observer={observer} />
+                        <Product productId="2" productName="Laptop" observer={observer} />
+                        <Product productId="3" productName="Tablet" observer={observer} />
+                    </div>
+                </div>
+            );
+        };
+
+        // Render the App component to the root element
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visitor Pattern in React</title>
+
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Simple CSS for shape illustration */
+        .circle {
+            width: 100px;
+            height: 100px;
+            background-color: lightblue;
+            border-radius: 50%;
+            margin: auto;
+        }
+
+        .rectangle {
+            width: 120px;
+            height: 80px;
+            background-color: lightcoral;
+            margin: auto;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Visitor Interface
+        const ShapeVisitor = {
+            visitCircle: (shape) => { },
+            visitRectangle: (shape) => { }
+        };
+
+        // Concrete Visitors for calculating Area and Perimeter
+        const AreaCalculator = {
+            visitCircle: (shape) => {
+                return {
+                    result: Math.PI * shape.radius * shape.radius,
+                    formula: `π * radius^2 = π * ${shape.radius}^2`
+                };
+            },
+            visitRectangle: (shape) => {
+                return {
+                    result: shape.width * shape.height,
+                    formula: `width * height = ${shape.width} * ${shape.height}`
+                };
+            }
+        };
+
+        const PerimeterCalculator = {
+            visitCircle: (shape) => {
+                return {
+                    result: 2 * Math.PI * shape.radius,
+                    formula: `2 * π * radius = 2 * π * ${shape.radius}`
+                };
+            },
+            visitRectangle: (shape) => {
+                return {
+                    result: 2 * (shape.width + shape.height),
+                    formula: `2 * (width + height) = 2 * (${shape.width} + ${shape.height})`
+                };
+            }
+        };
+
+        // Shape Components
+        const Circle = ({ radius }) => {
+            const [result, setResult] = useState(null);
+            const [formula, setFormula] = useState(null);
+            const [showFormula, setShowFormula] = useState(false);
+
+            const handleCalculation = (calculator) => {
+                const { result, formula } = calculator.visitCircle({ radius });
+                setResult(result);
+                setFormula(formula);
+                setShowFormula(true);
+            };
+
+            return (
+                <div className="text-center p-4">
+                    <div className="circle"></div>
+                    <h2 className="mt-4 text-lg">Circle</h2>
+                    <p className="text-sm">Radius: {radius}</p>
+                    <div className="mt-4">
+                        <button
+                            onClick={() => handleCalculation(AreaCalculator)}
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                            Calculate Area
+                        </button>
+                        <button
+                            onClick={() => handleCalculation(PerimeterCalculator)}
+                            className="ml-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                            Calculate Perimeter
+                        </button>
+                    </div>
+                    {showFormula && result && (
+                        <div className="mt-4">
+                            <p><span className="font-semibold text-blue-500">Formula: </span> {formula}</p>
+                            <p><span className="font-semibold text-red-500">Result: </span> {result.toFixed(2)}</p>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const Rectangle = ({ width, height }) => {
+            const [result, setResult] = useState(null);
+            const [formula, setFormula] = useState(null);
+            const [showFormula, setShowFormula] = useState(false);
+
+            const handleCalculation = (calculator) => {
+                const { result, formula } = calculator.visitRectangle({ width, height });
+                setResult(result);
+                setFormula(formula);
+                setShowFormula(true);
+            };
+
+            return (
+                <div className="text-center p-4">
+                    <div className="rectangle"></div>
+                    <h2 className="mt-4 text-lg">Rectangle</h2>
+                    <p className="text-sm">Width: {width}, Height: {height}</p>
+                    <div className="mt-4">
+                        <button
+                            onClick={() => handleCalculation(AreaCalculator)}
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                            Calculate Area
+                        </button>
+                        <button
+                            onClick={() => handleCalculation(PerimeterCalculator)}
+                            className="ml-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                            Calculate Perimeter
+                        </button>
+                    </div>
+                    {showFormula && result && (
+                        <div className="mt-4">
+                            <p><span className="font-semibold text-blue-500">Formula: </span> {formula}</p>
+                            <p><span className="font-semibold text-red-500">Result: </span> {result.toFixed(2)}</p>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // App Component
+        const App = () => {
+            return (
+                <div className="container mx-auto p-8">
+                    <h1 className="text-3xl font-bold text-center mb-8">Visitor Pattern Demo</h1>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <Circle radius={5} />
+                        <Rectangle width={10} height={20} />
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById("root"));
+    </script>
+</body>
+
+</html>

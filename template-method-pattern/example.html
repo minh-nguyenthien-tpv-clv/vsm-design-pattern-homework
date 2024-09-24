@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Method Pattern with ReactJS</title>
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+    <div id="root"></div>
+
+    <script type="text/babel">
+
+        // Base class using JavaScript
+        class CaffeineBeverage {
+            // Template method
+            prepareRecipe() {
+                this.boilWater();
+                this.brew();
+                this.pourInCup();
+                this.addCondiments();
+            }
+
+            // Common method for boiling water
+            boilWater() {
+                this.showMessage("Boiling water...");
+            }
+
+            // Common method for pouring into cup
+            pourInCup() {
+                this.showMessage("Pouring into cup...");
+            }
+
+            // Abstract methods (to be overridden by subclasses)
+            brew() {
+                throw new Error("This method must be overridden!");
+            }
+
+            addCondiments() {
+                throw new Error("This method must be overridden!");
+            }
+
+            showMessage(message) {
+                console.log(message);
+            }
+        }
+
+        // Concrete class for Tea
+        class Tea extends CaffeineBeverage {
+            brew() {
+                this.showMessage("Steeping the tea...");
+            }
+
+            addCondiments() {
+                this.showMessage("Adding lemon...");
+            }
+        }
+
+        // Concrete class for Coffee
+        class Coffee extends CaffeineBeverage {
+            brew() {
+                this.showMessage("Dripping coffee through filter...");
+            }
+
+            addCondiments() {
+                this.showMessage("Adding sugar and milk...");
+            }
+        }
+
+        // React component to display messages
+        function BeverageMessage({ message }) {
+            return (
+                <div className="p-4 my-2 bg-blue-100 text-blue-800 rounded-md shadow-md">
+                    {message}
+                </div>
+            );
+        }
+
+        // Main React component
+        function App() {
+            const [messages, setMessages] = React.useState([]);
+
+            // Override the showMessage method to update state
+            const showMessage = (message) => {
+                setMessages((prevMessages) => [...prevMessages, message]);
+            };
+
+            // Prepare tea
+            const makeTea = () => {
+                setMessages([]); // Clear messages
+                const tea = new Tea();
+                tea.showMessage = showMessage; // Attach the showMessage function
+                tea.prepareRecipe();
+            };
+
+            // Prepare coffee
+            const makeCoffee = () => {
+                setMessages([]); // Clear messages
+                const coffee = new Coffee();
+                coffee.showMessage = showMessage; // Attach the showMessage function
+                coffee.prepareRecipe();
+            };
+
+            return (
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold mb-4">Template Method Pattern with ReactJS</h1>
+                    <div className="flex justify-center gap-4 mb-4">
+                        <button
+                            onClick={makeTea}
+                            className="px-4 py-2 bg-green-500 text-white rounded-md shadow-md"
+                        >
+                            Make Tea
+                        </button>
+                        <button
+                            onClick={makeCoffee}
+                            className="px-4 py-2 bg-yellow-500 text-white rounded-md shadow-md"
+                        >
+                            Make Coffee
+                        </button>
+                    </div>
+                    <div className="messages">
+                        {messages.map((msg, index) => (
+                            <BeverageMessage key={index} message={msg} />
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // Render the React component
+        ReactDOM.render(<App />, document.getElementById('root'));
+
+    </script>
+</body>
+</html>

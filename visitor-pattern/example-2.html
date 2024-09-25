@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vessel Schedule Update</title>
-    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Vessel Schedule Update with Visitor Pattern</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/7.8.1/rxjs.umd.min.js"></script>
+    <script defer src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-100 p-6">
@@ -18,8 +18,88 @@
     <script type="text/babel">
         const { useState } = React;
 
+        // Visitor interface
+        class UpdateVisitor {
+            visitVesselCodeUpdate(update) { }
+            visitEstimateTimeUpdate(update) { }
+            visitDirectionUpdate(update) { }
+        }
+
+        // Log Update Visitor (Concrete Visitor)
+        class LogUpdateVisitor extends UpdateVisitor {
+            visitVesselCodeUpdate(update) {
+                console.log(update)
+                return `Row ${update.rowId}: Vessel Code updated from ${update.oldVesselCode} to ${update.newVesselCode}`;
+            }
+
+            visitEstimateTimeUpdate(update) {
+                if (update.oldETA !== update.newETA) {
+                    return `Row ${update.rowId}: ETA updated from ${update.oldETA} to ${update.newETA}`;
+                }
+                if (update.oldETB !== update.newETB) {
+                    return `Row ${update.rowId}: ETB updated from ${update.oldETB} to ${update.newETB}`;
+                }
+                if (update.oldETD !== update.newETD) {
+                    return `Row ${update.rowId}: ETD updated from ${update.oldETD} to ${update.newETD}`;
+                }
+            }
+
+            visitDirectionUpdate(update) {
+                return `Row ${update.rowId}: Direction updated from ${update.oldDirection} to ${update.newDirection}`;
+            }
+        }
+
+        // ScheduleUpdate interface
+        class ScheduleUpdate {
+            accept(visitor) { }
+        }
+
+        // Concrete Elements
+        class VesselCodeUpdate extends ScheduleUpdate {
+            constructor(rowId, oldVesselCode, newVesselCode) {
+                super();
+                this.rowId = rowId;
+                this.oldVesselCode = oldVesselCode;
+                this.newVesselCode = newVesselCode;
+            }
+
+            accept(visitor) {
+                return visitor.visitVesselCodeUpdate(this);
+            }
+        }
+
+        class EstimateTimeUpdate extends ScheduleUpdate {
+            constructor(rowId, oldETA, newETA, oldETB, newETB, oldETD, newETD) {
+                super();
+                this.rowId = rowId;
+                this.oldETA = oldETA;
+                this.newETA = newETA;
+                this.oldETB = oldETB;
+                this.newETB = newETB;
+                this.oldETD = oldETD;
+                this.newETD = newETD;
+            }
+
+            accept(visitor) {
+                return visitor.visitEstimateTimeUpdate(this);
+            }
+        }
+
+        class DirectionUpdate extends ScheduleUpdate {
+            constructor(rowId, oldDirection, newDirection) {
+                super();
+                this.rowId = rowId;
+                this.oldDirection = oldDirection;
+                this.newDirection = newDirection;
+            }
+
+            accept(visitor) {
+                return visitor.visitDirectionUpdate(this);
+            }
+        }
+
+        // React Component
         const ScheduleTable = () => {
-            // Initial schedule data
             const initialData = [
                 { id: 1, vesselCode: "VES123", ETA: "2024-09-25T08:00", ETB: "2024-09-25T12:00", ETD: "2024-09-25T18:00", direction: "North" },
                 { id: 2, vesselCode: "VES124", ETA: "2024-09-26T08:00", ETB: "2024-09-26T12:00", ETD: "2024-09-26T18:00", direction: "South" },
@@ -29,15 +109,60 @@
             const [logs, setLogs] = useState([]);
 
             const handleUpdate = (id, field, value) => {
-                // Update the schedule
                 const updatedSchedules = schedules.map(schedule =>
                     schedule.id === id ? { ...schedule, [field]: value } : schedule
                 );
                 setSchedules(updatedSchedules);
 
-                // Log the update
-                const logEntry = `Row ${id}: Updated ${field} to ${value}`;
-                setLogs([...logs, logEntry]);
+                const oldSchedule = schedules.find(sch => sch.id === id);
+                let update;
+
+                if (field === "vesselCode") {
+                    update = new VesselCodeUpdate(id, oldSchedule.vesselCode, value);
+                } else if (["ETA", "ETB", "ETD"].includes(field)) {
+                    switch (field) {
+                        case "ETA":
+                            update = new EstimateTimeUpdate(
+                                id,
+                                oldSchedule.ETA,
+                                value,
+                                oldSchedule.ETB,
+                                oldSchedule.ETB,
+                                oldSchedule.ETD,
+                                oldSchedule.ETD
+                            );
+                            break;
+                        case "ETB":
+                            update = new EstimateTimeUpdate(
+                                id,
+                                oldSchedule.ETA,
+                                oldSchedule.ETA,
+                                oldSchedule.ETB,
+                                value,
+                                oldSchedule.ETD,
+                                oldSchedule.ETD
+                            )
+                            break;
+                        case "ETD":
+                            update = new EstimateTimeUpdate(
+                                id,
+                                oldSchedule.ETA,
+                                oldSchedule.ETA,
+                                oldSchedule.ETB,
+                                oldSchedule.ETB,
+                                oldSchedule.ETD,
+                                value
+                            )
+                            break;
+                    }
+                } else if (field === "direction") {
+                    update = new DirectionUpdate(id, oldSchedule.direction, value);
+                }
+
+                const logVisitor = new LogUpdateVisitor();
+                const newLogs = [update.accept(logVisitor)]
+
+                setLogs(prevLogs => [...prevLogs, ...newLogs]);
             };
 
             return (
@@ -116,20 +241,15 @@
                     <div className="mt-6">
                         <h3 className="text-lg font-bold mb-2">Update Logs:</h3>
                         <ul className="bg-gray-50 p-4 border border-gray-300 rounded-lg max-h-64 overflow-auto">
-                            {logs.length > 0 ? (
-                                logs.map((log, index) => (
-                                    <li key={index} className="text-gray-700 mb-1">{log}</li>
-                                ))
-                            ) : (
-                                <p className="text-gray-500">No updates made yet.</p>
-                            )}
+                            {logs.map((log, index) => (
+                                <li key={index} className="text-gray-700 mb-1">{log}</li>
+                            ))}
                         </ul>
                     </div>
                 </div>
             );
         };
 
-        // Render the component
         ReactDOM.render(<ScheduleTable />, document.getElementById('app'));
     </script>
 </body>

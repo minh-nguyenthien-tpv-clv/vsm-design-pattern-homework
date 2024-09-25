@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vessel Schedule Update</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-6">
+    <div id="app" class="container mx-auto"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const ScheduleTable = () => {
+            // Initial schedule data
+            const initialData = [
+                { id: 1, vesselCode: "VES123", ETA: "2024-09-25T08:00", ETB: "2024-09-25T12:00", ETD: "2024-09-25T18:00", direction: "North" },
+                { id: 2, vesselCode: "VES124", ETA: "2024-09-26T08:00", ETB: "2024-09-26T12:00", ETD: "2024-09-26T18:00", direction: "South" },
+            ];
+
+            const [schedules, setSchedules] = useState(initialData);
+            const [logs, setLogs] = useState([]);
+
+            const handleUpdate = (id, field, value) => {
+                // Update the schedule
+                const updatedSchedules = schedules.map(schedule =>
+                    schedule.id === id ? { ...schedule, [field]: value } : schedule
+                );
+                setSchedules(updatedSchedules);
+
+                // Log the update
+                const logEntry = `Row ${id}: Updated ${field} to ${value}`;
+                setLogs([...logs, logEntry]);
+            };
+
+            return (
+                <div>
+                    <table className="min-w-full bg-white border border-gray-300 rounded-lg">
+                        <thead className="bg-gray-200 text-gray-600">
+                            <tr>
+                                <th className="py-2 px-4 border-b">Vessel Code</th>
+                                <th className="py-2 px-4 border-b">ETA</th>
+                                <th className="py-2 px-4 border-b">ETB</th>
+                                <th className="py-2 px-4 border-b">ETD</th>
+                                <th className="py-2 px-4 border-b">Direction</th>
+                                <th className="py-2 px-4 border-b">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {schedules.map(schedule => (
+                                <tr key={schedule.id} className="border-b">
+                                    <td className="py-2 px-4 border-r">
+                                        <input
+                                            type="text"
+                                            className="border p-1 w-full"
+                                            value={schedule.vesselCode}
+                                            onChange={e => handleUpdate(schedule.id, "vesselCode", e.target.value)}
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border-r">
+                                        <input
+                                            type="datetime-local"
+                                            className="border p-1 w-full"
+                                            value={schedule.ETA}
+                                            onChange={e => handleUpdate(schedule.id, "ETA", e.target.value)}
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border-r">
+                                        <input
+                                            type="datetime-local"
+                                            className="border p-1 w-full"
+                                            value={schedule.ETB}
+                                            onChange={e => handleUpdate(schedule.id, "ETB", e.target.value)}
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border-r">
+                                        <input
+                                            type="datetime-local"
+                                            className="border p-1 w-full"
+                                            value={schedule.ETD}
+                                            onChange={e => handleUpdate(schedule.id, "ETD", e.target.value)}
+                                        />
+                                    </td>
+                                    <td className="py-2 px-4 border-r">
+                                        <select
+                                            className="border p-1 w-full"
+                                            value={schedule.direction}
+                                            onChange={e => handleUpdate(schedule.id, "direction", e.target.value)}
+                                        >
+                                            <option value="North">North</option>
+                                            <option value="South">South</option>
+                                            <option value="East">East</option>
+                                            <option value="West">West</option>
+                                        </select>
+                                    </td>
+                                    <td className="py-2 px-4">
+                                        <button
+                                            className="bg-blue-500 text-white px-4 py-1 rounded"
+                                            onClick={() => alert(`Row ${schedule.id} saved`)}
+                                        >
+                                            Save
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    <div className="mt-6">
+                        <h3 className="text-lg font-bold mb-2">Update Logs:</h3>
+                        <ul className="bg-gray-50 p-4 border border-gray-300 rounded-lg max-h-64 overflow-auto">
+                            {logs.length > 0 ? (
+                                logs.map((log, index) => (
+                                    <li key={index} className="text-gray-700 mb-1">{log}</li>
+                                ))
+                            ) : (
+                                <p className="text-gray-500">No updates made yet.</p>
+                            )}
+                        </ul>
+                    </div>
+                </div>
+            );
+        };
+
+        // Render the component
+        ReactDOM.render(<ScheduleTable />, document.getElementById('app'));
+    </script>
+</body>
+
+</html>

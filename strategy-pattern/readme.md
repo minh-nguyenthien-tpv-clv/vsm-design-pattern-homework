@@ -97,6 +97,13 @@ Paying 1000 using e-wallet with ID mywallet123
 Paying 1000 by cash on delivery.
 ```
 
+### Strategy Pattern Usecases:
+- When there are multiple ways (algorithms) to perform a task
+- When you want to avoid nested conditional structures
+- When you want to follow the Open/Closed Principle in SOLID
+- When you want easier maintenance and extensibility
+- When you need to change algorithms at runtime
+
 ### Advantages of the Strategy Pattern:
 - **Easy to extend**: You can add new strategies without changing the core system code.
 - **Flexible**: Strategies can be selected or changed at runtime.

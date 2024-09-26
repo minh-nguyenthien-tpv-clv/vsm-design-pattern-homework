@@ -69,7 +69,7 @@
 
             return (
                 <div className="p-4">
-                    <h2 className="text-xl font-bold mb-2">Product List</h2>
+                    <h2 className="text-xl font-bold mb-2">Product List - Observer</h2>
                     <ul>
                         {inventory.map((product) => (
                             <li key={product.id} className="mb-2">
@@ -136,7 +136,7 @@
 
             return (
                 <div className="p-4">
-                    <h2 className="text-xl font-bold mb-2">Cart</h2>
+                    <h2 className="text-xl font-bold mb-2">Cart - SUBJECT</h2>
                     <ul>
                         {cart.map((item) => (
                             <li key={item.id} className="mb-2 flex">
@@ -182,7 +182,7 @@
 
             return (
                 <div className="p-4">
-                    <h2 className="text-xl font-bold mb-2">Inventory</h2>
+                    <h2 className="text-xl font-bold mb-2">Inventory - Observer</h2>
                     <ul>
                         {inventory.map((item) => (
                             <li key={item.id}>
@@ -212,7 +212,7 @@
 
             return (
                 <div className="p-4">
-                    <h2 className="text-xl font-bold mb-2">Invoice</h2>
+                    <h2 className="text-xl font-bold mb-2">Invoice - Observer</h2>
                     <ul>
                         {cart.map((product) => (
                             <li key={product.id}>

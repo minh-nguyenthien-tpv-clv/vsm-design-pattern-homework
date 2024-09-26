@@ -119,8 +119,3 @@ subject.setState("State 1");
 ## Real-World Examples
 - **Model-View-Controller (MVC)**: In MVC frameworks, the view observes the model, and updates are reflected when the model state changes.
 - **JavaScript Event Listeners**: The DOM's event listeners are a form of the observer pattern where the subject is the DOM element, and the observers are the event listeners.
-
----
-
-## License
-This project is licensed under the MIT License.

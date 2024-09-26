@@ -116,7 +116,9 @@ View source code for more info
 - Use to update values object of entity
 
 ```javascript
-function updateVessel(newInfo: any){
+type SomeType = VesselOilWaterCapacityValueObject | VesselDailyConsumptionValueObject | VesselMainEngineValueObject
+
+function updateVessel(newInfo: SomeType){
     if(newInfo instanceof VesselOilWaterCapacityValueObject){
         Vessel.updateVesselOilWaterCapacity(newInfo)
     }
@@ -129,8 +131,6 @@ function updateVessel(newInfo: any){
 }
 
 //--------------------------------------------
-
-type SomeType = VesselOilWaterCapacityValueObject | VesselDailyConsumptionValueObject | VesselMainEngineValueObject
 
 function UpdateVessel(newInfo: SomeType){
     let handlerUpdateVesselOilWaterCapacity = new UpdateVesselOilWaterCapacityHandler(vessel);
@@ -145,7 +145,7 @@ function UpdateVessel(newInfo: SomeType){
 }
 
 
-class UpdateVesselOilWaterCapacityHandler(){
+class UpdateVesselOilWaterCapacityHandler{
     private vessel
 
     contructor(vessel: Vessel){

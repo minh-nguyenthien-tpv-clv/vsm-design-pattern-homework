@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f7fafc; /* Màu nền giống Tailwind */
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto mt-10">
+        <h1 class="text-2xl font-bold mb-4">Record Management</h1>
+        <div class="mb-4">
+            <input id="recordInput" type="text" placeholder="Enter record" class="border p-2 rounded w-full">
+            <button id="addBtn" class="bg-blue-500 text-white p-2 rounded mt-2">Add Record</button>
+        </div>
+        <table class="min-w-full bg-white shadow-md rounded">
+            <thead>
+                <tr>
+                    <th class="py-2 px-4 border">ID</th>
+                    <th class="py-2 px-4 border">Record</th>
+                    <th class="py-2 px-4 border">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="recordTableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        class Command {
+            execute() {}
+            undo() {}
+        }
+
+        class AddRecordCommand extends Command {
+            constructor(table, record) {
+                super();
+                this.table = table;
+                this.record = record;
+            }
+
+            execute() {
+                this.table.addRecord(this.record);
+            }
+
+            undo() {
+                this.table.removeRecord(this.record.id);
+            }
+        }
+
+        class RemoveRecordCommand extends Command {
+            constructor(table, recordId) {
+                super();
+                this.table = table;
+                this.recordId = recordId;
+                this.record = table.getRecordById(recordId);
+            }
+
+            execute() {
+                this.table.removeRecord(this.recordId);
+            }
+
+            undo() {
+                this.table.addRecord(this.record);
+            }
+        }
+
+        class RecordTable {
+            constructor() {
+                this.records = [];
+                this.commandHistory = [];
+                this.recordIdCounter = 1;
+            }
+
+            addRecord(record) {
+                record.id = this.recordIdCounter++;
+                this.records.push(record);
+                this.render();
+            }
+
+            removeRecord(recordId) {
+                this.records = this.records.filter(record => record.id !== recordId);
+                this.render();
+            }
+
+            getRecordById(recordId) {
+                return this.records.find(record => record.id === recordId);
+            }
+
+            render() {
+                const tbody = document.getElementById('recordTableBody');
+                tbody.innerHTML = '';
+                this.records.forEach(record => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="border px-4 py-2">${record.id}</td>
+                        <td class="border px-4 py-2">${record.name}</td>
+                        <td class="border px-4 py-2">
+                            <button onclick="editRecord(${record.id})" class="bg-yellow-500 text-white p-1 rounded">Edit</button>
+                            <button onclick="removeRecord(${record.id})" class="bg-red-500 text-white p-1 rounded">Remove</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        const recordTable = new RecordTable();
+
+        document.getElementById('addBtn').addEventListener('click', () => {
+            const input = document.getElementById('recordInput');
+            const record = { name: input.value.trim() };
+            if (record.name) {
+                const command = new AddRecordCommand(recordTable, record);
+                command.execute();
+                recordTable.commandHistory.push(command);
+                input.value = '';
+            } else {
+                alert("Please enter a record.");
+            }
+        });
+
+        function editRecord(id) {
+            const record = recordTable.getRecordById(id);
+            const newName = prompt("Edit record:", record.name);
+            if (newName) {
+                recordTable.removeRecord(id);
+                const updatedRecord = { id: id, name: newName };
+                const command = new AddRecordCommand(recordTable, updatedRecord);
+                command.execute();
+                recordTable.commandHistory.push(command);
+            }
+        }
+
+        function removeRecord(id) {
+            const command = new RemoveRecordCommand(recordTable, id);
+            command.execute();
+            recordTable.commandHistory.push(command);
+        }
+    </script>
+</body>
+</html>

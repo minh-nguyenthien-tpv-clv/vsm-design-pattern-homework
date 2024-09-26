@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Validation with Chain of Responsibility</title>
+  <script src="form-validation.js" defer></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex justify-center items-center h-screen">
+  <div class="bg-white p-8 rounded-lg shadow-lg w-96">
+    <h2 class="text-2xl font-bold mb-6 text-center">Registration Form</h2>
+    <form id="registrationForm">
+      <div class="mb-4">
+        <label for="name" class="block text-gray-700">Name</label>
+        <input type="text" id="name" class="w-full p-2 border border-gray-300 rounded mt-1" placeholder="Enter your name">
+        <small class="text-red-500 hidden" id="nameError"></small>
+      </div>
+      <div class="mb-4">
+        <label for="age" class="block text-gray-700">Age</label>
+        <input type="text" id="age" type="number" class="w-full p-2 border border-gray-300 rounded mt-1" placeholder="Enter your age">
+        <small class="text-red-500 hidden" id="ageError"></small>
+      </div>
+      <div class="mb-4">
+        <label for="email" class="block text-gray-700">Email</label>
+        <input id="email" class="w-full p-2 border border-gray-300 rounded mt-1" placeholder="Enter your email">
+        <small class="text-red-500 hidden" id="emailError"></small>
+      </div>
+      <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded">Submit</button>
+    </form>
+  </div>
+</body>
+</html>

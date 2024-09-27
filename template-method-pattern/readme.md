@@ -77,6 +77,13 @@ const coffee = new Coffee();
 coffee.prepareRecipe();  // Prepare coffee
 ```
 
+## Usecases
+
+- There are common steps but require customization
+- Reuse common code
+- Control the execution steps
+- Simplify the structure of subclasses
+
 ## Benefits
 
 - **Code Reusability**: Allows for the reuse of common steps in different subclasses without rewriting code.

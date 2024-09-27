@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memento Pattern Table with Undo/Redo</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.0/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      // Memento pattern to manage table state history for undo/redo
+      class Memento {
+        constructor(state) {
+          this.state = JSON.stringify(state);
+        }
+
+        getState() {
+          return JSON.parse(this.state);
+        }
+      }
+
+      class Caretaker {
+        constructor() {
+          this.history = [];
+          this.currentIndex = -1;
+        }
+
+        save(state) {
+          // If we undo and then change state, discard future history
+          if (this.currentIndex < this.history.length - 1) {
+            this.history = this.history.slice(0, this.currentIndex + 1);
+          }
+
+          const memento = new Memento(state);
+          this.history.push(memento);
+          this.currentIndex++;
+        }
+
+        undo() {
+          if (this.currentIndex > 0) {
+            this.currentIndex--;
+            return this.history[this.currentIndex].getState();
+          }
+          return null;
+        }
+
+        redo() {
+          if (this.currentIndex < this.history.length - 1) {
+            this.currentIndex++;
+            return this.history[this.currentIndex].getState();
+          }
+          return null;
+        }
+      }
+
+      // Persistent Caretaker instance
+      const caretaker = new Caretaker();
+
+      const MementoTable = () => {
+        const initialData = [
+          {
+            key: 1,
+            vesselCode: 'Vessel 1',
+            eta: '2024-09-27T12:00',
+            etb: '2024-09-27T15:00',
+            etd: '2024-09-27T18:00',
+          },
+          {
+            key: 2,
+            vesselCode: 'Vessel 2',
+            eta: '2024-09-28T12:00',
+            etb: '2024-09-28T15:00',
+            etd: '2024-09-28T18:00',
+          },
+          {
+            key: 3,
+            vesselCode: 'Vessel 3',
+            eta: '2024-09-29T12:00',
+            etb: '2024-09-29T15:00',
+            etd: '2024-09-29T18:00',
+          },
+        ];
+
+        const [dataSource, setDataSource] = React.useState(initialData);
+
+        React.useEffect(() => {
+          caretaker.save(initialData); // Save initial state
+        }, []);
+
+        // Update cell and save new state in history
+        const handleDateChange = (date, key, column) => {
+          const newData = dataSource.map((item) => {
+            if (item.key === key) {
+              return { ...item, [column]: date };
+            }
+            return item;
+          });
+          setDataSource(newData);
+          caretaker.save(newData); // Save state on each change
+        };
+
+        // Undo function
+        const handleUndo = () => {
+          const prevState = caretaker.undo();
+          if (prevState) {
+            setDataSource(prevState);
+          }
+        };
+
+        // Redo function
+        const handleRedo = () => {
+          const nextState = caretaker.redo();
+          if (nextState) {
+            setDataSource(nextState);
+          }
+        };
+
+        return (
+          <div className='max-w-4xl mx-auto mt-10 p-6 bg-white shadow-md rounded'>
+            <h2 className='text-2xl font-bold mb-4'>Vessel Schedule</h2>
+            <table className='min-w-full table-auto'>
+              <thead>
+                <tr className='bg-gray-200'>
+                  <th className='px-4 py-2'>Vessel Code</th>
+                  <th className='px-4 py-2'>ETA</th>
+                  <th className='px-4 py-2'>ETB</th>
+                  <th className='px-4 py-2'>ETD</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dataSource.map((item) => (
+                  <tr key={item.key} className='border-b'>
+                    <td className='px-4 py-2'>{item.vesselCode}</td>
+                    <td className='px-4 py-2'>
+                      <input
+                        type='datetime-local'
+                        value={item.eta}
+                        onChange={(e) =>
+                          handleDateChange(e.target.value, item.key, 'eta')
+                        }
+                        className='border rounded p-1'
+                      />
+                    </td>
+                    <td className='px-4 py-2'>
+                      <input
+                        type='datetime-local'
+                        value={item.etb}
+                        onChange={(e) =>
+                          handleDateChange(e.target.value, item.key, 'etb')
+                        }
+                        className='border rounded p-1'
+                      />
+                    </td>
+                    <td className='px-4 py-2'>
+                      <input
+                        type='datetime-local'
+                        value={item.etd}
+                        onChange={(e) =>
+                          handleDateChange(e.target.value, item.key, 'etd')
+                        }
+                        className='border rounded p-1'
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className='flex space-x-4 mt-6'>
+              <button
+                onClick={handleUndo}
+                className='bg-blue-500 text-white px-4 py-2 rounded'
+              >
+                Undo
+              </button>
+              <button
+                onClick={handleRedo}
+                className='bg-green-500 text-white px-4 py-2 rounded'
+              >
+                Redo
+              </button>
+            </div>
+          </div>
+        );
+      };
+
+      // Render the table
+      ReactDOM.render(<MementoTable />, document.getElementById('root'));
+    </script>
+  </body>
+</html>

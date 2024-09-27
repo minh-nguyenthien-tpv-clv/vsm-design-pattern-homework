@@ -16,7 +16,7 @@ Memento is a behavioral design pattern that lets you save and restore the previo
 ## Structure
 
 - **Originator**: is the object whose state you want to save and restore. It can create a memento and use a memento to restore its state.
-- **Memento**: is a simple object that stores the state of the Originator. No business logic, onlu serves to hold the state.
+- **Memento**: is a simple object that stores the state of the Originator. No business logic, only serves to hold the state.
 - **Caretaker**: is responsible for keeping track of the mementos. No modify or access the contents of the memento.
 
 ## How to implement
@@ -30,13 +30,19 @@ Memento is a behavioral design pattern that lets you save and restore the previo
 7. The caretaker should know when to request new mementos from the originator, how to store them and when to restore the originator with a particular memento.
 8. The link between caretaker and originators may be moved into the memento class. In this case, each memento must be connected to the originator that had created it. The restoration method would also move to the memento class. (only make sence if the memento class is nested into originator)
 
+## Class diagram
+
+![alt text](image.png)
+
 ## Pros and Cons
 
 Pros:
 
 - Produce snapshots of the object's state without violating its encapsulation.
 - Simplify the originator's code by letting the caretaker maintain the history of the originator's state.
-  Cons:
+
+Cons:
+
 - The app might consume lots of RAM if clients create mementos too often.
 - Caretakers should track the originator's lifecircle to be able to destroy obsolete mementos.
 - Most dynamic programming languages, such as PHP, Python and JavaScript, can't guarantee that the state within the memento stays untouched.

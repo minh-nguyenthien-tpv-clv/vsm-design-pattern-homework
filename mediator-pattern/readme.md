@@ -30,11 +30,15 @@ Mediator is a behavioral design pattern that lets reduce chaotic dependencies be
 5. Components should store a reference to the mediator object. The connection is usually established in the component's contructor, where a mediator is passed as an argument.
 6. Change the component's code so that they can call the mediator's notification method instead of methods on other components. Extract the code that involves calling other components into the mediator class. Execute this code whenever the mediator receives notifications from that component.
 
+## Class diagram
+
+![alt text](image.png)
+
 ## Pros and cons
 
 ### Pros:
 
-- Single responsibility principle. Can extract the communications between various components into a single .place, making it easier to comprehend and maintain.
+- Single responsibility principle. Can extract the communications between various components into a single place, making it easier to comprehend and maintain.
 - Open/Closed Principle. Can introduce new mediators without having to change the actual components.
 - Reduce coupling between various components of a program.
 - Reuse individual components more easily.

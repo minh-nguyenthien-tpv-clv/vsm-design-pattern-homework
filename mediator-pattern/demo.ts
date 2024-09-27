@@ -1,3 +1,7 @@
+// vessel code
+// vvd
+// checkbox trunk feed
+
 interface Mediator {
   notify(sender: object, event: string): void;
 }

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mediator Pattern Form</title>
+    <script
+      defer
+      src="https://unpkg.com/react@17/umd/react.development.js"
+    ></script>
+    <script
+      defer
+      src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"
+    ></script>
+    <script
+      defer
+      src="https://unpkg.com/babel-standalone@6/babel.min.js"
+    ></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.0/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      // Mediator class to handle the interaction between form components
+      class FormMediator {
+        constructor() {
+          this.vesselCode = '';
+          this.voyageNoDirection = '';
+          this.trunkChecked = false;
+          this.feederChecked = false;
+        }
+
+        // Update the vessel code and manage the state of the form
+        updateVesselCode(vesselCode, updateVoyageEnabled) {
+          this.vesselCode = vesselCode;
+          updateVoyageEnabled(Boolean(vesselCode));
+          this.updateCheckboxes();
+          console.log('vessel code:', this.vesselCode, this.voyageNoDirection);
+        }
+
+        // Update voyage number and direction, and manage the checkbox states
+        updateVoyageNoDirection(voyageNoDirection) {
+          this.voyageNoDirection = voyageNoDirection;
+          this.updateCheckboxes();
+          console.log('vvd:', this.voyageNoDirection, this.vesselCode);
+        }
+
+        // Update checkboxes based on vesselCode and voyageNoDirection
+        updateCheckboxes() {
+          console.log('run', this.vesselCode, this.voyageNoDirection);
+          if (
+            this.vesselCode === 'NLAT' &&
+            this.voyageNoDirection === '0123-N'
+          ) {
+            this.trunkChecked = true;
+            this.feederChecked = false;
+          } else {
+            this.trunkChecked = false;
+            this.feederChecked = true;
+          }
+        }
+
+        // Get the current state of the checkboxes
+        getCheckboxState() {
+          return {
+            trunkChecked: this.trunkChecked,
+            feederChecked: this.feederChecked,
+          };
+        }
+      }
+
+      const formMediator = new FormMediator();
+
+      // Form component
+      const MediatorForm = () => {
+        const [vesselCode, setVesselCode] = React.useState('');
+        const [voyageNoDirection, setVoyageNoDirection] = React.useState('');
+        const [isVoyageEnabled, setVoyageEnabled] = React.useState(false);
+        const [trunkChecked, setTrunkChecked] = React.useState(false);
+        const [feederChecked, setFeederChecked] = React.useState(false);
+
+        console.log('new');
+
+        const handleVesselCodeChange = (event) => {
+          const value = event.target.value;
+          setVesselCode(value);
+          formMediator.updateVesselCode(value, setVoyageEnabled);
+          const checkboxState = formMediator.getCheckboxState();
+          setTrunkChecked(checkboxState.trunkChecked);
+          setFeederChecked(checkboxState.feederChecked);
+        };
+
+        const handleVoyageNoDirectionChange = (event) => {
+          const value = event.target.value;
+          setVoyageNoDirection(value);
+          formMediator.updateVoyageNoDirection(value);
+          const checkboxState = formMediator.getCheckboxState();
+          setTrunkChecked(checkboxState.trunkChecked);
+          setFeederChecked(checkboxState.feederChecked);
+        };
+
+        return (
+          <div className='max-w-lg mx-auto mt-10 p-6 bg-white shadow-md rounded'>
+            <h2 className='text-2xl font-bold mb-4'>Vessel Form</h2>
+            <form>
+              {/* Vessel Code Field */}
+              <div className='mb-4'>
+                <label
+                  htmlFor='vesselCode'
+                  className='block text-sm font-medium text-gray-700'
+                >
+                  Vessel Code
+                </label>
+                <select
+                  id='vesselCode'
+                  value={vesselCode}
+                  onChange={handleVesselCodeChange}
+                  className='mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                >
+                  <option value=''>Select Vessel Code</option>
+                  <option value='NLAT'>NLAT</option>
+                  <option value='SLON'>SLON</option>
+                </select>
+              </div>
+
+              {/* Voyage No Direction Field */}
+              <div className='mb-4'>
+                <label
+                  htmlFor='voyageNoDirection'
+                  className='block text-sm font-medium text-gray-700'
+                >
+                  Voyage No Direction
+                </label>
+                <select
+                  id='voyageNoDirection'
+                  value={voyageNoDirection}
+                  onChange={handleVoyageNoDirectionChange}
+                  disabled={!isVoyageEnabled}
+                  className={`mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
+                    isVoyageEnabled ? '' : 'bg-gray-200'
+                  }`}
+                >
+                  <option value=''>Select Voyage No Direction</option>
+                  <option value='0123-N'>0123-N</option>
+                  <option value='0456-S'>0456-S</option>
+                </select>
+              </div>
+
+              {/* Checkboxes */}
+              <div className='mb-4'>
+                <label className='block text-sm font-medium text-gray-700'>
+                  Service Type
+                </label>
+                <div className='flex items-center mt-2'>
+                  <input
+                    type='checkbox'
+                    checked={trunkChecked}
+                    readOnly
+                    className='h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500'
+                  />
+                  <label
+                    htmlFor='trunk'
+                    className='ml-2 block text-sm text-gray-700'
+                  >
+                    Trunk
+                  </label>
+                </div>
+                <div className='flex items-center mt-2'>
+                  <input
+                    type='checkbox'
+                    checked={feederChecked}
+                    readOnly
+                    className='h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500'
+                  />
+                  <label
+                    htmlFor='feeder'
+                    className='ml-2 block text-sm text-gray-700'
+                  >
+                    Feeder
+                  </label>
+                </div>
+              </div>
+            </form>
+          </div>
+        );
+      };
+
+      // Render the form
+      ReactDOM.render(<MediatorForm />, document.getElementById('root'));
+    </script>
+  </body>
+</html>

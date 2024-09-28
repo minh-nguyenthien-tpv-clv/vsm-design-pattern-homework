@@ -1,42 +1,74 @@
-// Observer Class
-class Observer {
-    private subscribers: { productId: string; callbacks: Array<() => void> }[] = [];
+// Interface for Observer
+interface Observer {
+    update(product: string): void;
+}
 
-    public subscribe(productId: string, callback: () => void): void {
-        const existingSubscriber = this.subscribers.find(sub => sub.productId === productId);
-        if (existingSubscriber) {
-            existingSubscriber.callbacks.push(callback);
-        } else {
-            this.subscribers.push({ productId, callbacks: [callback] });
-        }
+// Interface for Subject
+interface Subject {
+    subscribe(observer: Observer): void;
+    unsubscribe(observer: Observer): void;
+    notify(): void;
+}
+
+// Concrete Subject (Store)
+class Store implements Subject {
+    private observers: Observer[] = [];
+    private newProduct: string = "";
+
+    // Add an Observer
+    subscribe(observer: Observer): void {
+        this.observers.push(observer);
     }
 
-    public notify(productId: string): void {
-        const subscriber = this.subscribers.find(sub => sub.productId === productId);
-        if (subscriber) {
-            subscriber.callbacks.forEach(callback => callback());
-        }
+    // Remove an Observer
+    unsubscribe(observer: Observer): void {
+        this.observers = this.observers.filter(obs => obs !== observer);
+    }
+
+    // Notify all Observers about the new product
+    notify(): void {
+        this.observers.forEach(observer => observer.update(this.newProduct));
+    }
+
+    // Add a new product and notify customers
+    addNewProduct(product: string): void {
+        console.log(`Store: New product available - ${product}`);
+        this.newProduct = product;
+        this.notify();
     }
 }
 
-// Create an instance of the Observer
-const observer = new Observer();
+// Concrete Observer (Customer)
+class Customer implements Observer {
+    private name: string;
 
-// Simulate subscribing to products
-observer.subscribe("Laptop", () => {
-    console.log("Notification: Great news! Smartphone is now available!");
-});
+    constructor(name: string) {
+        this.name = name;
+    }
 
-observer.subscribe("Phone", () => {
-    console.log("Notification: Great news! Laptop is now available!");
-});
+    // Receive notification from the store
+    update(product: string): void {
+        console.log(`${this.name} received notification: New product available - ${product}`);
+    }
+}
 
-// Simulate notifying product availability
-const notifyProductAvailability = (productId: string) => {
-    console.log(`Notifying subscribers for product ${productId}...`);
-    observer.notify(productId);
-};
+// Using the Observer Pattern
 
-// Simulate the product availability notifications
-notifyProductAvailability("Laptop");
-notifyProductAvailability("Phone");
+const store = new Store();
+
+// Create customers
+const customer1 = new Customer("Customer 1");
+const customer2 = new Customer("Customer 2");
+
+// Customers subscribe to receive notifications from the store
+store.subscribe(customer1);
+store.subscribe(customer2);
+
+// Store adds a new product
+store.addNewProduct("Phone"); // Both customers will receive the notification
+
+// Customer 1 unsubscribes from receiving notifications
+store.unsubscribe(customer1);
+
+// Store adds another new product
+store.addNewProduct("Laptop"); // Only customer 2 will receive the notification

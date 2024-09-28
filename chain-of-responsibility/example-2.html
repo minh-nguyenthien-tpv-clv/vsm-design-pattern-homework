@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vessel Schedule</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 p-8">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Lịch trình
+        class Schedule {
+            constructor(vesselCode, ETA, ETB, ETD, port, travelTime) {
+                this.vesselCode = vesselCode;
+                this.ETA = new Date(ETA);
+                this.ETB = new Date(ETB);
+                this.ETD = new Date(ETD);
+                this.port = port;
+                this.travelTime = travelTime; // Thời gian đi sẽ được tính toán
+            }
+        }
+
+        // Handler interface
+        class BaseHandler {
+            setNext(handler) {
+                this.nextHandler = handler;
+                return handler;
+            }
+
+            handle(schedule, schedules) {
+                if (this.nextHandler) {
+                    return this.nextHandler.handle(schedule, schedules);
+                }
+                return null;
+            }
+        }
+
+        // Concrete Handlers
+        class UniqueVesselCodeHandler extends BaseHandler {
+            handle(schedule, schedules) {
+                const exists = schedules.some(s => s.vesselCode === schedule.vesselCode);
+                if (exists) {
+                    return `Vessel code ${schedule.vesselCode} already exists.`;
+                }
+                return super.handle(schedule, schedules);
+            }
+        }
+
+        class TimeOrderHandler extends BaseHandler {
+            handle(schedule, schedules) {
+                if (schedule.ETA > schedule.ETB || schedule.ETB > schedule.ETD) {
+                    return `ETA must be less than or equal to ETB and ETB must be less than or equal to ETD.`;
+                }
+                return super.handle(schedule, schedules);
+            }
+        }
+
+        class NewRowTimeCheckHandler extends BaseHandler {
+            handle(schedule, schedules) {
+                if (schedules.length > 0) {
+                    const lastSchedule = schedules[schedules.length - 1];
+                    if (schedule.ETA <= lastSchedule.ETD) {
+                        return `ETA of the new row must be greater than ETD of the last schedule.`;
+                    }
+                }
+                return super.handle(schedule, schedules);
+            }
+        }
+
+        class TravelTimeCalculatorHandler extends BaseHandler {
+            handle(schedule, schedules) {
+                if (schedules.length > 0) {
+                    const lastSchedule = schedules[schedules.length - 1];
+                    const travelTime = (schedule.ETA.getTime() - lastSchedule.ETA.getTime()) / (1000 * 60 * 60); // Convert milliseconds to hours
+                    schedule.travelTime = travelTime; // Lưu lại thời gian đi
+                }
+                return super.handle(schedule, schedules);
+            }
+        }
+
+        const App = () => {
+            const [schedules, setSchedules] = useState([
+                new Schedule('Vessel001', '2024-10-01T10:00:00', '2024-10-01T12:00:00', '2024-10-01T14:00:00', 'HKG', 0),
+                new Schedule('Vessel002', '2024-10-01T15:00:00', '2024-10-01T16:00:00', '2024-10-01T18:00:00', 'SIN', 5)
+            ]);
+            const [vesselCode, setVesselCode] = useState('');
+            const [ETA, setETA] = useState('');
+            const [ETB, setETB] = useState('');
+            const [ETD, setETD] = useState('');
+            const [port, setPort] = useState('');
+            const [error, setError] = useState('');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const newSchedule = new Schedule(vesselCode, ETA, ETB, ETD, port);
+
+                // Khởi tạo chuỗi kiểm tra
+                const handlerA = new UniqueVesselCodeHandler();
+                const handlerB = new TimeOrderHandler();
+                const handlerC = new NewRowTimeCheckHandler();
+                const handlerD = new TravelTimeCalculatorHandler();
+
+                // Thiết lập chuỗi
+                handlerA.setNext(handlerB).setNext(handlerC).setNext(handlerD);
+
+                // Kiểm tra lịch trình mới
+                const result = handlerA.handle(newSchedule, schedules);
+                if (result) {
+                    setError(result);
+                } else {
+                    setSchedules([...schedules, newSchedule]); // Nếu không có lỗi, thêm vào danh sách
+                    setError('');
+                    setVesselCode('');
+                    setETA('');
+                    setETB('');
+                    setETD('');
+                    setPort('');
+                }
+
+                // Reset form
+            };
+
+            return (
+                <div className="max-w-full bg-white p-4 rounded shadow-md">
+                    <h2 className="text-xl font-bold mb-4">Vessel Schedule</h2>
+                    <form className="max-w-md" onSubmit={handleSubmit}>
+                        <div className="mb-4">
+                            <label className="block mb-1">Vessel Code:</label>
+                            <input type="text" value={vesselCode} onChange={(e) => setVesselCode(e.target.value)} className="border rounded w-full p-2" required />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block mb-1">ETA:</label>
+                            <input type="datetime-local" value={ETA} onChange={(e) => setETA(e.target.value)} className="border rounded w-full p-2" required />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block mb-1">ETB:</label>
+                            <input type="datetime-local" value={ETB} onChange={(e) => setETB(e.target.value)} className="border rounded w-full p-2" required />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block mb-1">ETD:</label>
+                            <input type="datetime-local" value={ETD} onChange={(e) => setETD(e.target.value)} className="border rounded w-full p-2" required />
+                        </div>
+                        <div className="mb-4">
+                            <label className="block mb-1">Port:</label>
+                            <select value={port} onChange={(e) => setPort(e.target.value)} className="border rounded w-full p-2" required>
+                                <option value="" disabled>Select a port</option>
+                                {["HKG", "SIN", "SHG", "NGB", "QIN", "HAN", "BKK", "TPE", "YOK", "KRS", "JKT", "KUA", "MAN", "KOL", "DHA", "DJB", "TBS", "KHI"].map((port) => (
+                                    <option key={port} value={port}>{port}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">Add Schedule</button>
+                    </form>
+                    {error && <p className="text-red-500 mt-4">{error}</p>}
+                    <table className="mt-6 w-full border">
+                        <thead>
+                            <tr>
+                                <th className="border px-4 py-2">Vessel Code</th>
+                                <th className="border px-4 py-2">ETA</th>
+                                <th className="border px-4 py-2">ETB</th>
+                                <th className="border px-4 py-2">ETD</th>
+                                <th className="border px-4 py-2">Port</th>
+                                <th className="border px-4 py-2">Travel Time (hours)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {schedules.map((schedule, index) => (
+                                <tr key={index}>
+                                    <td className="border px-4 py-2">{schedule.vesselCode}</td>
+                                    <td className="border px-4 py-2">{schedule.ETA.toISOString()}</td>
+                                    <td className="border px-4 py-2">{schedule.ETB.toISOString()}</td>
+                                    <td className="border px-4 py-2">{schedule.ETD.toISOString()}</td>
+                                    <td className="border px-4 py-2">{schedule.port}</td>
+                                    <td className="border px-4 py-2">{schedule.travelTime !== undefined ? schedule.travelTime.toFixed(2) : 'N/A'}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+
+</html>

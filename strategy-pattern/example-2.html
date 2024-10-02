@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Sort Example with Strategy Pattern</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div id="root" class="w-full max-w-lg mx-auto bg-white shadow-md rounded p-4"></div>
+
+    <script type="text/babel">
+
+        // Helper function for delay
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        // Strategy Interface
+        class SortStrategy {
+            async sort(array, setArray) {
+                throw new Error('Sort method must be implemented');
+            }
+        }
+
+        // Bubble Sort Strategy
+        class BubbleSortStrategy extends SortStrategy {
+            async sort(array, setArray) {
+                let arr = [...array];
+                for (let i = 0; i < arr.length - 1; i++) {
+                    for (let j = 0; j < arr.length - i - 1; j++) {
+                        if (arr[j] > arr[j + 1]) {
+                            [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+                            setArray([...arr]);  // Update state to trigger re-render
+                            await delay(300);    // Delay between each step
+                        }
+                    }
+                }
+                return arr;
+            }
+        }
+
+        // Selection Sort Strategy
+        class SelectionSortStrategy extends SortStrategy {
+            async sort(array, setArray) {
+                let arr = [...array];
+                for (let i = 0; i < arr.length; i++) {
+                    let minIdx = i;
+                    for (let j = i + 1; j < arr.length; j++) {
+                        if (arr[j] < arr[minIdx]) {
+                            minIdx = j;
+                        }
+                    }
+                    if (minIdx !== i) {
+                        [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
+                        setArray([...arr]);  // Update state to trigger re-render
+                        await delay(300);    // Delay between each step
+                    }
+                }
+                return arr;
+            }
+        }
+
+        // Quick Sort Strategy
+        class QuickSortStrategy extends SortStrategy {
+            async sort(array, setArray) {
+                let arr = [...array];
+                await this.quickSortHelper(arr, 0, arr.length - 1, setArray);
+                return arr;
+            }
+
+            async quickSortHelper(arr, low, high, setArray) {
+                if (low < high) {
+                    let pi = await this.partition(arr, low, high, setArray);
+                    await this.quickSortHelper(arr, low, pi - 1, setArray);
+                    await this.quickSortHelper(arr, pi + 1, high, setArray);
+                }
+            }
+
+            async partition(arr, low, high, setArray) {
+                let pivot = arr[high];
+                let i = low - 1;
+                for (let j = low; j < high; j++) {
+                    if (arr[j] <= pivot) {
+                        i++;
+                        [arr[i], arr[j]] = [arr[j], arr[i]];
+                        setArray([...arr]);  // Update state to trigger re-render
+                        await delay(300);    // Delay between each step
+                    }
+                }
+                [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+                setArray([...arr]);  // Update state to trigger re-render
+                await delay(300);    // Delay between each step
+                return i + 1;
+            }
+        }
+
+        // Sort Context
+        class SortContext {
+            constructor(strategy) {
+                this.strategy = strategy;
+            }
+
+            setStrategy(strategy) {
+                this.strategy = strategy;
+            }
+
+            async executeSort(array, setArray) {
+                const startTime = Date.now();
+                const result = await this.strategy.sort(array, setArray);;
+                const endTime = Date.now();
+                return [result, endTime - startTime];
+            }
+        }
+
+        // React Function Component
+        const SortApp = () => {
+            const [rootArray, setRootArray] = React.useState(generateRandomArray());
+            const [array, setArray] = React.useState(rootArray);
+            const [sortedArray, setSortedArray] = React.useState([]);
+            const [sortedTime, setSortedTime] = React.useState(0);
+            const [isSorting, setIsSorting] = React.useState(false);
+            const sortContext = React.useRef(new SortContext(new BubbleSortStrategy()));
+
+            const handleSort = async (strategy) => {
+                const array = rootArray;
+                setArray(array);
+                setIsSorting(true);
+                sortContext.current.setStrategy(strategy);
+                const sorted = await sortContext.current.executeSort(array, setArray);
+                setSortedArray(sorted[0]);
+                setSortedTime(sorted[1])
+                setIsSorting(false);
+            };
+
+            const handleReset = () => {
+                if (isSorting) return;  // Prevent reset during sorting
+                const newArray = generateRandomArray();
+                setRootArray(newArray);
+                setArray(newArray);
+                setSortedArray([]);
+            };
+
+            return (
+                <div className="p-6">
+                    <h1 className="text-2xl font-bold mb-4 text-center">Sorting Algorithms</h1>
+                    <div className="mb-4">
+                        <h2 className="text-xl font-semibold">Array:</h2>
+                        <div className="bg-gray-100 p-4 rounded">
+                            {array.join(', ')}
+                        </div>
+                        <button onClick={handleReset} className={`mt-2 bg-blue-500 text-white px-4 py-2 rounded ${isSorting ? 'opacity-50' : ''}`} disabled={isSorting}>
+                            Reset Array
+                        </button>
+                    </div>
+
+                    <div className="mb-4">
+                        <h2 className="text-xl font-semibold">Sort Algorithms:</h2>
+                        <div className="flex space-x-2">
+                            <button onClick={() => handleSort(new BubbleSortStrategy())} className="bg-green-500 text-white px-4 py-2 rounded" disabled={isSorting}>
+                                Bubble Sort
+                            </button>
+                            <button onClick={() => handleSort(new SelectionSortStrategy())} className="bg-yellow-500 text-white px-4 py-2 rounded" disabled={isSorting}>
+                                Selection Sort
+                            </button>
+                            <button onClick={() => handleSort(new QuickSortStrategy())} className="bg-red-500 text-white px-4 py-2 rounded" disabled={isSorting}>
+                                Quick Sort
+                            </button>
+                        </div>
+                    </div>
+
+                    {!isSorting && (
+                        <div className="mt-4">
+                            <h2 className="text-xl font-semibold">Sorted:</h2>
+                            <div className="bg-gray-100 p-4 rounded">
+                                {sortedTime} ms
+                            </div>
+                        </div>
+                    )}
+
+                    {isSorting && (
+                        <div className="mt-4 text-red-500">
+                            Sorting in progress...
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // Utility function to generate random array
+        const generateRandomArray = () => {
+            return Array.from({ length: 10 }, () => Math.floor(Math.random() * 100));
+        };
+
+        // Render React app
+        ReactDOM.render(<SortApp />, document.getElementById('root'));
+
+    </script>
+    <script src="https://unpkg.com/react/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.development.js"></script>
+</body>
+
+</html>

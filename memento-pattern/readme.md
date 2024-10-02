@@ -19,6 +19,10 @@ Memento is a behavioral design pattern that lets you save and restore the previo
 - **Memento**: is a simple object that stores the state of the Originator. No business logic, only serves to hold the state.
 - **Caretaker**: is responsible for keeping track of the mementos. No modify or access the contents of the memento.
 
+## Class diagram
+
+![alt text](image.png)
+
 ## When to use
 
 1. Use the Memento pattern when you want to produce snapshots of the object’s state to be able to restore a previous state of the object.
@@ -34,10 +38,6 @@ Memento is a behavioral design pattern that lets you save and restore the previo
 6. Add a method for restoring the originator's state to its class
 7. The caretaker should know when to request new mementos from the originator, how to store them and when to restore the originator with a particular memento.
 8. The link between caretaker and originators may be moved into the memento class. In this case, each memento must be connected to the originator that had created it. The restoration method would also move to the memento class. (only make sence if the memento class is nested into originator)
-
-## Class diagram
-
-![alt text](image.png)
 
 ## Pros and Cons
 

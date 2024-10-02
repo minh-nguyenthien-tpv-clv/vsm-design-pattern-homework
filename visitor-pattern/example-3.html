@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Example</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/react/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body class="bg-gray-100 p-10">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Visitor Interface
+        class InteractionVisitor {
+            visitPost(post) { }
+            visitComment(comment) { }
+        }
+
+        // Concrete Visitor
+        class InteractionCounter extends InteractionVisitor {
+            constructor() {
+                super();
+                this.output = [];
+            }
+
+            visitPost(post) {
+                const likes = post.getLikes();
+                // this.output.push(`Post ID: ${post.getId()} has ${likes} likes.`);
+                this.output.push({
+                    type: 'POST',
+                    id: post.getId(),
+                    likes: likes
+                });
+            }
+
+            visitComment(comment) {
+                const likes = comment.getLikes();
+                // this.output.push(`Comment ID: ${comment.getId()} has ${likes} likes.`);
+                this.output.push({
+                    type: 'COMMENT',
+                    id: comment.getId(),
+                    likes: likes
+                });
+            }
+
+            getOutput() {
+                return this.output;
+            }
+        }
+
+        // Element Interface
+        class SocialMediaElement {
+            accept(visitor) { }
+        }
+
+        // Concrete Element: Post
+        class Post extends SocialMediaElement {
+            constructor(id, content) {
+                super();
+                this.id = id;
+                this.content = content;
+                this.likes = 0;
+                this.comments = [];
+            }
+
+            getId() {
+                return this.id;
+            }
+
+            getContent() {
+                return this.content;
+            }
+
+            getLikes() {
+                return this.likes;
+            }
+
+            accept(visitor) {
+                visitor.visitPost(this);
+            }
+
+            like() {
+                this.likes++;
+            }
+
+            addComment(comment) {
+                this.comments.push(comment);
+            }
+
+            getComments() {
+                return this.comments;
+            }
+        }
+
+        // Concrete Element: Comment
+        class Comment extends SocialMediaElement {
+            constructor(id, content) {
+                super();
+                this.id = id;
+                this.content = content;
+                this.likes = 0;
+            }
+
+            getId() {
+                return this.id;
+            }
+
+            getContent() {
+                return this.content;
+            }
+
+            getLikes() {
+                return this.likes;
+            }
+
+            accept(visitor) {
+                visitor.visitComment(this);
+            }
+
+            like() {
+                this.likes++;
+            }
+        }
+
+        // React Component
+        function App() {
+            const [posts, setPosts] = React.useState([
+                (() => {
+                    const post = new Post(1, "This is the first post content.");
+                    post.addComment(new Comment(1, "This is the first comment."));
+                    post.addComment(new Comment(2, "This is the second comment."));
+                    return post;
+                })(),
+                (() => {
+                    const post = new Post(2, "Here is another interesting post.");
+                    post.addComment(new Comment(3, "Great post!"));
+                    post.addComment(new Comment(4, "Thanks for sharing."));
+                    return post;
+                })(),
+                (() => {
+                    const post = new Post(3, "Did you know about this cool fact?");
+                    post.addComment(new Comment(5, "I had no idea!"));
+                    return post;
+                })(),
+            ]);
+
+            const handleLikePost = (post) => {
+                post.like();
+                setPosts([...posts]); // Trigger re-render
+            };
+
+            const handleLikeComment = (comment) => {
+                comment.like();
+                setPosts([...posts]); // Trigger re-render
+            };
+
+            const interactionCounter = new InteractionCounter();
+            posts.forEach(post => {
+                post.accept(interactionCounter)
+                post.comments.forEach(comment => comment.accept(interactionCounter))
+            });
+            const output = interactionCounter.getOutput();
+
+            return (
+                <div className="mx-auto bg-white p-5 rounded shadow flex gap-4">
+                    <div className="flex-1">
+                        <h1 className="text-xl font-bold mb-4">Social Media Interaction</h1>
+                        {posts.map(post => (
+                            <div key={post.getId()} className="mb-4 p-4 border rounded">
+                                <p className="font-semibold">Post ID: {post.getId()}</p>
+                                <p className="border border-gray-300 p-2 mb-2 rounded-md">
+                                    <div className="font-bold text-green-800 text-2xl">{post.getContent()}</div>
+
+                                    <div className="flex items-center">
+                                        <span className="mr-2">{post.getLikes()} Likes</span>
+                                        <span
+                                            className="cursor-pointer text-blue-500"
+                                            onClick={() => handleLikePost(post)}
+                                        >
+                                            ❤️
+                                        </span>
+                                    </div>
+                                </p>
+                                <h3 className="font-semibold mt-4">Comments:</h3>
+                                <div className="pl-4">
+                                    {post.getComments().map(comment => (
+                                        <div key={comment.getId()} className="mb-2 border border-gray-300 p-2 rounded-md">
+                                            <p className="font-semibold">Comment ID: {comment.getId()}</p>
+                                            <p>{comment.getContent()}</p>
+                                            <div className="flex items-center mt-1 select-none">
+                                                <span className="mr-2">{comment.getLikes()} Likes</span>
+                                                <span
+                                                    className="cursor-pointer text-blue-500"
+                                                    onClick={() => handleLikeComment(comment)}
+                                                >
+                                                    ❤️
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="border border-gray-300 p-4 rounded-md">
+                        <h2 className="text-lg font-semibold">Likes Summary</h2>
+                        <div className="list-disc pl-5">
+                            {output.map((line, index) => (
+                                <div className={`${line.type === 'POST' ? "pt-2 font-bold" : "pl-4 text-sm"}`} key={index}>{line.type} - ID: {line.id} - Likes: {line.likes}</div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render App
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+
+</body>
+
+</html>

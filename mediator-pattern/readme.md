@@ -16,16 +16,20 @@ Mediator is a behavioral design pattern that lets reduce chaotic dependencies be
    Example:
    Error occurs in a service -> Mediator handles notification -> Sends alert to admin, logs the issue, and initiates corrective services.
 
-## Structure:
-
-- **Mediator interface**: interface declares methods of communication with components, which usually include just a single notification method.
-- **Concrete components**: various classes that contain some business logic.
-
 ## When to use
 
 1. Use the Mediator pattern when it’s hard to change some of the classes because they are tightly coupled to a bunch of other classes.
 2. Use the pattern when you can’t reuse a component in a different program because it’s too dependent on other components.
 3. Use the Mediator when you find yourself creating tons of component subclasses just to reuse some basic behavior in various contexts.
+
+## Structure:
+
+- **Mediator interface**: interface declares methods of communication with components, which usually include just a single notification method.
+- **Concrete components**: various classes that contain some business logic.
+
+## Class diagram
+
+![alt text](image.png)
 
 ## How to implement
 
@@ -35,10 +39,6 @@ Mediator is a behavioral design pattern that lets reduce chaotic dependencies be
 4. Make the mediator responsible for the creation and destruction of component objects. After this, the mediator may resemble a factory or a facade.
 5. Components should store a reference to the mediator object. The connection is usually established in the component's contructor, where a mediator is passed as an argument.
 6. Change the component's code so that they can call the mediator's notification method instead of methods on other components. Extract the code that involves calling other components into the mediator class. Execute this code whenever the mediator receives notifications from that component.
-
-## Class diagram
-
-![alt text](image.png)
 
 ## Pros and cons
 
